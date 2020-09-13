@@ -9,7 +9,10 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Camera;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -33,6 +36,11 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,6 +49,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Bitmap mSegmImage;
 
     private Button mStillImageButton;
     private TextToSpeech mTTs;
@@ -77,6 +87,52 @@ public class MainActivity extends AppCompatActivity {
             mCamera = camera;
             startPreview();
             Toast.makeText(getApplicationContext(), "Camera connected successfully!", Toast.LENGTH_SHORT).show();
+
+            // Colour encoding function implemented here so it can be rapidly checked at app startup. Can be hooked to a thread timer later.
+
+            try {
+                URL url = new URL("https://i.imgur.com/kM1Cwfa.png");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                Bitmap mBitmap = BitmapFactory.decodeStream(input);
+
+                int w = mBitmap.getWidth();
+                int h = mBitmap.getHeight();
+                String img_width = Integer.toString(w);
+                String img_height = Integer.toString(h);
+
+                // int midw = (int) ((int) w*0.99);  use to test non-working
+                int midw = (int) ((int) w*0.6);
+                int midh = (int) ((int) h*0.5);
+
+                Toast.makeText(getApplicationContext(), "Width=" + img_width + "Height=" + img_height, Toast.LENGTH_SHORT).show();
+                // colour for floor = (30, 208, 85)
+
+                Color pixelColor = mBitmap.getColor(midw, midh);
+
+                int red = (int) (pixelColor.red()*255);
+                int green = (int) (pixelColor.green()*255);
+                int blue = (int) (pixelColor.blue()*255);
+                String r, g, b;
+
+                r = Integer.toString((int) (pixelColor.red()*255));
+                g = Integer.toString((int) (pixelColor.green()*255));
+                b = Integer.toString((int) (pixelColor.blue()*255));
+
+                Toast.makeText(getApplicationContext(), r + " " + g + " " + b, Toast.LENGTH_SHORT).show();
+
+                if(red == 30 && green == 208 && blue == 85) {
+                    voiceOutput(1);
+                } else {
+                    voiceOutput(2);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override
@@ -143,11 +199,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate (Bundle savedInstanceState)  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mPreview = (TextureView) findViewById(R.id.PreviewView);
+
     }
 
     @Override
@@ -192,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
             );
         }
+
     }
 
     private void setupCamera(int width, int height) {
@@ -312,11 +370,20 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(MainActivity.this,lineToSpeak,Toast.LENGTH_LONG).show();
         //speak
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mTTs.speak(lineToSpeak, TextToSpeech.QUEUE_FLUSH,null,null);
-        } else {
-            mTTs.speak(lineToSpeak, TextToSpeech.QUEUE_FLUSH, null);
-        }
+
+    }
+
+    public void segmentedToVoice() {
+        Toast.makeText(getApplicationContext(), "Hello!", Toast.LENGTH_SHORT).show();
+        Bitmap mBitmap = BitmapFactory.decodeFile("I:\\Reman\\Programs\\android\\camera-segmentation-app\\app\\src\\main\\java\\com\\example\\camera_segmentation_app\\TestImg.png");
+        // colour for floor = (30, 208, 85)
+
+        int img_width;
+        int img_height;
+        img_width = mBitmap.getWidth();
+        img_height = mBitmap.getHeight();
+
+        System.out.println(img_width + img_height);
     }
 
 }
