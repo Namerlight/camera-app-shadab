@@ -103,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
                 String img_width = Integer.toString(w);
                 String img_height = Integer.toString(h);
 
-                // int midw = (int) ((int) w*0.99);  use to test non-working
-                int midw = (int) ((int) w*0.6);
+                int midw = (int) ((int) w*0.99);  
+                //  int midw = (int) ((int) w*0.6);
                 int midh = (int) ((int) h*0.5);
 
                 Toast.makeText(getApplicationContext(), "Width=" + img_width + "Height=" + img_height, Toast.LENGTH_SHORT).show();
