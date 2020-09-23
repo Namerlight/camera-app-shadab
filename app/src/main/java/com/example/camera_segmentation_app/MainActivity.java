@@ -31,6 +31,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,18 +40,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-class segmImage implements Runnable {
-
-    @Override
-    public void run() {
-
-
-
-    }
-}
+import com.example.camera_segmentation_app.ImageSegmenter;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ImageSegmenter segmenter;
     private Bitmap mSegmImage;
     private TextToSpeech mTTs;
 
@@ -87,16 +81,27 @@ public class MainActivity extends AppCompatActivity {
             startPreview();
             Toast.makeText(getApplicationContext(), "Camera connected successfully!", Toast.LENGTH_SHORT).show();
 
-            final int i = 0;
+            // Secondary thread to process the segmentation without blocking up the main.
             final Handler mHandler = new Handler(getMainLooper());
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+
+                    // Gets the preview image and places it in a bitmap object called
                     Bitmap img = mPreview.getBitmap();
+
+                    // This is where the function to carry out the segmentation would go... IF I HAD ONE
+
+                    // This would take the output of the segmentation. Right now, it just takes the actual image and converts it to audio
                     segmentToVoice(img);
-                    mHandler.postDelayed(this, 2000);
+
+                    // This function would update the mini preview box every round.
+                    updateSegmPreview(img);
+
+                    mHandler.postDelayed(this, 5000);
+
                 }
-            }, 2000);
+            }, 5000);
 
 
             // Colour encoding function implemented here so it can be rapidly checked at app startup. Can be hooked to a thread timer later.
@@ -338,24 +343,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void voiceOutput(int voiceLine) {
-        String lineToSpeak;
-        switch(voiceLine) {
-            case 1:
-                lineToSpeak = "Clear in front.";
-                break;
-            case 2:
-                lineToSpeak = "Clutter in front.";
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + "");
-        }
-
-        Toast.makeText(MainActivity.this,lineToSpeak,Toast.LENGTH_LONG).show();
-        //speak
-
-    }
-
     public Integer segmentToVoice(Bitmap mSegmImage) {
 
         int w = mSegmImage.getWidth();
@@ -389,6 +376,29 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return null;
+    }
+
+    private void voiceOutput(int voiceLine) {
+        String lineToSpeak;
+        switch(voiceLine) {
+            case 1:
+                lineToSpeak = "Clear in front.";
+                break;
+            case 2:
+                lineToSpeak = "Clutter in front.";
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + "");
+        }
+
+        Toast.makeText(MainActivity.this,lineToSpeak,Toast.LENGTH_LONG).show();
+        //speak
+
+    }
+
+    private void updateSegmPreview(Bitmap semgOuput) {
+
+
     }
 
 }
