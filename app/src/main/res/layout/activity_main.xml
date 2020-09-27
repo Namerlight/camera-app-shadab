@@ -13,6 +13,22 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.454" />
+
+    <ImageView
+        android:id="@+id/MiniView"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginStart="225dp"
+        android:layout_marginTop="225dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="2dp"
+        app:layout_constraintBottom_toBottomOf="@+id/PreviewView"
+        app:layout_constraintEnd_toEndOf="@+id/PreviewView"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/PreviewView"
+        app:layout_constraintTop_toTopOf="@+id/PreviewView"
+        app:layout_constraintVertical_bias="0.969" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

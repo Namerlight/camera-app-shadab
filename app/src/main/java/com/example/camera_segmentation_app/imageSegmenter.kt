@@ -4,7 +4,7 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.util.Log
-import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -13,7 +13,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
 
-class ImageSegmenter(private val activity: Activity) {
+public class ImageSegmenter(private val activity: Activity) {
 
     companion object {
         const val TAG: String = "ImageSegmenter"
@@ -148,11 +148,9 @@ class ImageSegmenter(private val activity: Activity) {
 
     private fun getModelPath(): String = "${modelList[currentModelIndex].path}.tflite"
 
-
     private fun getNumBytesPerChannel(): Int = 4
 
-
-    fun segmentFrame(bitmap: Bitmap): IntArray {
+        fun segmentFrame(bitmap: Bitmap): IntArray {
         if (tflite == null) {
             Log.e(TAG, "Image segmenter has not been initialized; Skipped.")
         }
@@ -167,7 +165,7 @@ class ImageSegmenter(private val activity: Activity) {
         while (segmentedImage.hasRemaining())
             outFrame[i++] = segmentedImage.int
 
-        return outFrame;
+        return outFrame
     }
 
     data class Model(

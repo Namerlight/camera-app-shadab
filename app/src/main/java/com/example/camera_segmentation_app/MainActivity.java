@@ -1,9 +1,5 @@
 package com.example.camera_segmentation_app;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -18,38 +14,36 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import com.example.camera_segmentation_app.ImageSegmenter;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ImageSegmenter segmenter;
     private Bitmap mSegmImage;
     private TextToSpeech mTTs;
 
     private static final int REQUEST_CAMERA_PERMISSION_RESULT = 0;
     private TextureView mPreview;
+    private ImageView mMiniView;
     private TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
@@ -81,35 +75,37 @@ public class MainActivity extends AppCompatActivity {
             startPreview();
             Toast.makeText(getApplicationContext(), "Camera connected successfully!", Toast.LENGTH_SHORT).show();
 
+            final ImageSegmenter Segmenter = new ImageSegmenter(MainActivity.this);
+
             // Secondary thread to process the segmentation without blocking up the main.
             final Handler mHandler = new Handler(getMainLooper());
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-
                     // Gets the preview image and places it in a bitmap object called
-                    Bitmap img = mPreview.getBitmap();
+                    Bitmap fullimg = mPreview.getBitmap();
+                    Bitmap img = Bitmap.createScaledBitmap(fullimg, 225, 225, true);
 
-                    // This is where the function to carry out the segmentation would go... IF I HAD ONE
+                    // Segmenter.segmentFrame(img)
+                    // This is where the function to carry out the segmentation goes
+                    int[] outputArray = Segmenter.segmentFrame(img);
+
+                    Log.d("OUT", Arrays.toString(outputArray));
+
+                    int width = 225;
+                    int height = 225;
+
+                    Bitmap outputBitmap = Bitmap.createBitmap(outputArray, width, height, Bitmap.Config.ARGB_8888);
 
                     // This would take the output of the segmentation. Right now, it just takes the actual image and converts it to audio
-                    segmentToVoice(img);
+                    segmentToVoice(outputBitmap);
 
                     // This function would update the mini preview box every round.
                     updateSegmPreview(img);
 
-                    mHandler.postDelayed(this, 5000);
-
+                    mHandler.postDelayed(this, 1000);
                 }
-            }, 5000);
-
-
-            // Colour encoding function implemented here so it can be rapidly checked at app startup. Can be hooked to a thread timer later.
-
-//            Bitmap img = mPreview.getBitmap();
-//            Toast.makeText(getApplicationContext(), "Width=" + img.getWidth() + "Height=" + img.getHeight(), Toast.LENGTH_SHORT).show();
-//
-//            segmentToVoice(img);
+            }, 1000);
 
         }
 
@@ -199,15 +195,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void continuousSegm() {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(), "Running", Toast.LENGTH_SHORT).show();
-            }
-        }, 1000);
-    };
 
     protected void onPause() {
         closeCamera();
@@ -267,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 
     @SuppressLint("MissingPermission")
     private void connectCamera() {
@@ -343,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public Integer segmentToVoice(Bitmap mSegmImage) {
+    public void segmentToVoice(Bitmap mSegmImage) {
 
         int w = mSegmImage.getWidth();
         int h = mSegmImage.getHeight();
@@ -353,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
         int midw = (int) ((int) w*0.5);
         int midh = (int) ((int) h*0.5);
 
-        Toast.makeText(getApplicationContext(), "Width=" + img_width + "Height=" + img_height, Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getApplicationContext(), "Width=" + img_width + "Height=" + img_height, Toast.LENGTH_SHORT).show();
         // colour for floor = (30, 208, 85)
 
         Color pixelColor = mSegmImage.getColor(midw, midh);
@@ -367,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
         g = Integer.toString((int) (pixelColor.green()*255));
         b = Integer.toString((int) (pixelColor.blue()*255));
 
-        Toast.makeText(getApplicationContext(), r + " " + g + " " + b, Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getApplicationContext(), r + " " + g + " " + b, Toast.LENGTH_SHORT).show();
 
         if(red == 30 && green == 208 && blue == 85) {
             voiceOutput(1);
@@ -375,7 +363,6 @@ public class MainActivity extends AppCompatActivity {
             voiceOutput(2);
         }
 
-        return null;
     }
 
     private void voiceOutput(int voiceLine) {
@@ -396,9 +383,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void updateSegmPreview(Bitmap semgOuput) {
-
-
+    private void updateSegmPreview(Bitmap segmOutput) {
+        Toast.makeText(MainActivity.this, "Updating Preview",Toast.LENGTH_LONG).show();
+        mMiniView= findViewById(R.id.MiniView);
+        mMiniView.setImageBitmap(segmOutput);
     }
 
 }
